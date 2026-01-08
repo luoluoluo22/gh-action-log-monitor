@@ -2,6 +2,7 @@ import json
 import requests
 import time
 import sys
+import os
 
 # Global variables storage
 VARIABLES = {}
@@ -86,8 +87,24 @@ def main():
         log("No workflows.json found.")
         return
 
+    # Get current event name (schedule or workflow_dispatch)
+    event_name = os.environ.get('EVENT_NAME', 'unknown')
+    log(f"Triggered by event: {event_name}")
+
     for wf in workflows:
         if not wf.get('enabled', True):
+            continue
+        
+        # Check explicit trigger settings
+        run_on_schedule = wf.get('run_on_schedule', True)
+        run_on_dispatch = wf.get('run_on_dispatch', True)
+
+        if event_name == 'schedule' and not run_on_schedule:
+            log(f"Skipping {wf.get('name')} (Disabled for schedule)")
+            continue
+        
+        if event_name == 'workflow_dispatch' and not run_on_dispatch:
+            log(f"Skipping {wf.get('name')} (Disabled for manual dispatch)")
             continue
             
         log(f"--- Running Workflow: {wf.get('name')} ---")

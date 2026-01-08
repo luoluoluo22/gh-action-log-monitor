@@ -27,6 +27,8 @@ jobs:
 
       - name: Run Task
         id: task
+        env:
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           python workflow_engine.py > log.txt 2>&1
           echo "STATUS=success" >> $GITHUB_ENV
