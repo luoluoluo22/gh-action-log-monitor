@@ -342,6 +342,10 @@
                                 <input type="checkbox" id="check-manual"> 手动触发
                             </label>
                             <div style="width:1px; height:20px; background:#ddd; margin:0 5px;"></div>
+                            <input type="text" id="pip-deps" placeholder="📦 PIP包 (如: requests, pandas)"
+                                title="运行时自动安装的PIP包，逗号分隔"
+                                style="border:1px solid #ddd; padding:4px 8px; border-radius:4px; font-size:12px; width:180px;">
+                            <div style="width:1px; height:20px; background:#ddd; margin:0 5px;"></div>
                             <button class="btn" style="color:#cf222e; border-color:#d0d7de;" onclick="deleteTask()">🗑️
                                 删除</button>
                             <button class="btn btn-primary" id="btn-save-current" onclick="saveCurrentTask()">💾
@@ -571,6 +575,8 @@
             timeInput.value = wf.schedule_time || "";
             timeInput.style.display = document.getElementById('check-schedule').checked ? 'block' : 'none';
 
+            document.getElementById('pip-deps').value = wf.pip || "";
+
             // Filter logs
             const logPanel = document.getElementById('task-output');
             // Try to match specific log section
@@ -619,6 +625,8 @@
             wf.script = editor.getValue();
             wf.run_on_schedule = document.getElementById('check-schedule').checked;
             wf.run_on_dispatch = document.getElementById('check-manual').checked;
+            wf.schedule_time = document.getElementById('schedule-time').value;
+            wf.pip = document.getElementById('pip-deps').value;
 
             const token = document.getElementById('gh-token').value;
             const btn = document.getElementById('btn-save-current');

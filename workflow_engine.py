@@ -4,6 +4,7 @@ import sys
 import traceback
 import io
 import contextlib
+import subprocess
 
 def log(message):
     print(f"[LOG] {message}")
@@ -11,22 +12,27 @@ def log(message):
 def execute_workflow(wf):
     name = wf.get('name', 'Untitled')
     script = wf.get('script', '')
-    
+    pip_deps = wf.get('pip', '') # 'pandas, beautifulsoup4'
+
     if not script.strip():
         log(f"Skipping {name}: No script content")
         return
 
     log(f"--- Running Workflow: {name} ---")
-    
-    # Capture stdout specifically for this script execution if needed, 
-    # but currently we pipe global stdout to log.txt, so print() works fine.
-    
-    # We define a global context for the script
-    # We allow imports inside the script to work naturally
-    
+
+    # Install Dependencies
+    if pip_deps:
+        pkgs = [p.strip() for p in pip_deps.split(',') if p.strip()]
+        if pkgs:
+            log(f"Installing dependencies: {', '.join(pkgs)}...")
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install"] + pkgs)
+                log("Dependencies installed successfully.")
+            except Exception as e:
+                log(f"Error installing dependencies: {e}")
+
     try:
         # Execute the script
-        # Pass minimal globals. User scripts should import what they need.
         exec(script, {'__name__': '__main__'})
     except Exception as e:
         log(f"Error running workflow {name}: {e}")
