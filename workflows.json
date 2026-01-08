@@ -22,7 +22,7 @@
     },
     {
         "name": "测试",
-        "enabled": false,
+        "enabled": true,
         "run_on_schedule": true,
         "run_on_dispatch": true,
         "script": "import requests\n\nprint('[LOG] New task started')\n# Write your code here"
