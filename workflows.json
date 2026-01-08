@@ -25,6 +25,7 @@
         "enabled": true,
         "run_on_schedule": true,
         "run_on_dispatch": true,
-        "script": "import requests\n\nprint('[LOG] New task started')\n# Write your code here"
+        "script": "import requests\n\nprint('[LOG] New task started')\n# Write your code here",
+        "schedule_time": "22:35"
     }
 ]
