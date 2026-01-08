@@ -435,7 +435,9 @@
                 const div = document.createElement('div');
                 div.className = `task-item ${idx === selectedIndex ? 'selected' : ''}`;
                 div.onclick = (e) => {
-                    if (e.target.tagName !== 'INPUT' && e.target.className !== 'slider') selectTask(idx);
+                    // Prevent selection if clicking the toggle switch
+                    if (e.target.closest('.toggle-switch')) return;
+                    selectTask(idx);
                 };
 
                 div.innerHTML = `
