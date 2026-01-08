@@ -289,6 +289,7 @@
     <div class="header-title">
         <h2 style="margin:0;">🤖 自动化任务管理台</h2>
         <div id="top-auth">
+            <span id="run-status-text" style="margin-right:15px; font-weight:bold; font-size:14px;"></span>
             <button class="btn" style="margin-right:10px; color:#cf222e; border-color:#d0d7de;"
                 onclick="runAllTasks()">⚡ 运行所有任务</button>
             <span id="auth-status"></span>
@@ -334,6 +335,8 @@
                                 <input type="checkbox" id="check-manual"> 手动触发
                             </label>
                             <div style="width:1px; height:20px; background:#ddd; margin:0 5px;"></div>
+                            <button class="btn" style="color:#cf222e; border-color:#d0d7de;" onclick="deleteTask()">🗑️
+                                删除</button>
                             <button class="btn btn-primary" id="btn-save-current" onclick="saveCurrentTask()">💾
                                 保存配置</button>
                             <button class="btn btn-run" onclick="runCurrentTask()">▶️ 运行任务</button>
@@ -504,6 +507,23 @@
             // Update the UI logic only, user needs to click save to persist
         }
 
+        function deleteTask() {
+            if (selectedIndex === -1) return;
+            if (!confirm(`确定要删除任务 "${allWorkflows[selectedIndex].name}" 吗？\n删除后需要点击“保存配置”才会被提交。`)) return;
+
+            allWorkflows.splice(selectedIndex, 1);
+            if (allWorkflows.length > 0) {
+                selectTask(Math.max(0, selectedIndex - 1));
+            } else {
+                selectedIndex = -1;
+                document.getElementById('task-list-container').innerHTML = '';
+                editor.setValue("# Create a new task to start", -1);
+                document.getElementById('task-name-input').value = "";
+            }
+            renderSidebar();
+            showToast("⚠️ 任务已移除，请点击保存配置以生效");
+        }
+
         async function saveCurrentTask() {
             if (selectedIndex === -1) return;
 
@@ -596,6 +616,135 @@
                 `).join('');
                 document.getElementById('history-container').innerHTML = html;
             });
+        }
+
+
+        function deleteTask() {
+            if (selectedIndex === -1) return;
+            if (!confirm(`确定要删除任务 "${allWorkflows[selectedIndex].name}" 吗？\n删除后需要点击“保存配置”才会被提交。`)) return;
+
+            allWorkflows.splice(selectedIndex, 1);
+            if (allWorkflows.length > 0) {
+                selectTask(Math.max(0, selectedIndex - 1));
+            } else {
+                selectedIndex = -1;
+                document.getElementById('task-list-container').innerHTML = '';
+                editor.setValue("# Create a new task to start", -1);
+                document.getElementById('task-name-input').value = "";
+            }
+            renderSidebar();
+            showToast("⚠️ 任务已移除，请点击保存配置以生效");
+        }
+
+        // Redefined to allow saving even if no task is selected (e.g. after deletion)
+        async function saveCurrentTask() {
+            // Update local model only if a task is selected
+            if (selectedIndex !== -1) {
+                const wf = allWorkflows[selectedIndex];
+                wf.name = document.getElementById('task-name-input').value;
+                wf.script = editor.getValue();
+                wf.run_on_schedule = document.getElementById('check-schedule').checked;
+                wf.run_on_dispatch = document.getElementById('check-manual').checked;
+            }
+
+            const token = document.getElementById('gh-token').value;
+            const btn = document.getElementById('btn-save-current');
+
+            try {
+                btn.disabled = true;
+                btn.innerText = "保存中...";
+
+                const resp = await fetch(`https://api.github.com/repos/${REPO}/contents/workflows.json`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: `Update workflows configuration`,
+                        content: btoa(unescape(encodeURIComponent(JSON.stringify(allWorkflows, null, 4)))),
+                        sha: window.sha
+                    })
+                });
+
+                if (!resp.ok) throw new Error(resp.statusText);
+
+                const resData = await resp.json();
+                window.sha = resData.content.sha;
+                showToast("✅ 保存成功！所有更改已提交");
+                renderSidebar();
+            } catch (e) {
+                showToast("❌ 保存失败: " + e.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "💾 保存配置";
+            }
+        }
+
+        let isPolling = false;
+        let pollTimer = null;
+
+        function updateStatus(text, color = '#666') {
+            const el = document.getElementById('run-status-text');
+            if (el) {
+                el.innerText = text;
+                el.style.color = color;
+            }
+        }
+
+        function startPolling() {
+            if (isPolling) return;
+            isPolling = true;
+            updateStatus("运行中... (每5秒检查)", "#d29922");
+            pollTimer = setInterval(pollStatus, 5000);
+        }
+
+        async function pollStatus() {
+            try {
+                const token = document.getElementById('gh-token').value;
+                const headers = token ? { 'Authorization': `token ${token}` } : {};
+                const resp = await fetch(`https://api.github.com/repos/${REPO}/actions/runs?per_page=1`, { headers });
+                const data = await resp.json();
+
+                if (data.workflow_runs && data.workflow_runs.length > 0) {
+                    const latestRun = data.workflow_runs[0];
+                    if (latestRun.status === 'completed') {
+                        clearInterval(pollTimer);
+                        isPolling = false;
+
+                        const color = latestRun.conclusion === 'success' ? '#2da44e' : '#cf222e';
+                        updateStatus(`完成: ${latestRun.conclusion}`, color);
+                        showToast(`运行结束: ${latestRun.conclusion}`);
+
+                        setTimeout(() => {
+                            showToast("正在刷新日志...");
+                            loadData().then(() => {
+                                if (selectedIndex !== -1) selectTask(selectedIndex);
+                            });
+                        }, 3000);
+                    } else {
+                        updateStatus(`状态: ${latestRun.status}`, "#d29922");
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Redefined to include polling
+        async function triggerWorkflow(taskName = null) {
+            const token = document.getElementById('gh-token').value;
+            const inputs = taskName ? { task_name: taskName } : {};
+
+            try {
+                const resp = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/main.yml/dispatches`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ref: 'main', inputs: inputs })
+                });
+
+                if (resp.ok || resp.status === 204) {
+                    showToast(taskName ? `🚀 正在运行: ${taskName}` : "🚀 已触发所有任务");
+                    startPolling();
+                } else {
+                    throw new Error("Status " + resp.status);
+                }
+            } catch (e) { showToast("❌ 触发失败", "error"); }
         }
     </script>
 </body>
