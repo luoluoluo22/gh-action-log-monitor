@@ -15,7 +15,7 @@
             },
             {
                 "type": "python",
-                "code": "log('Found ' + str(len(vars['top_ids'])) + ' stories')\nvars['top_5'] = vars['top_ids'][:5]"
+                "code": "log('Found ' + str(len(vars['top_ids'])) + ' stories')\\nvars['top_5'] = vars['top_ids'][:5]"
             },
             {
                 "type": "loop",
@@ -33,6 +33,26 @@
                         "message": "Title: {story_detail[title]}"
                     }
                 ]
+            }
+        ]
+    },
+    {
+        "name": "Repo Star Tracker",
+        "enabled": true,
+        "steps": [
+            {
+                "type": "log",
+                "message": "Checking stats for luoluoluo22/gh-action-log-monitor..."
+            },
+            {
+                "type": "http",
+                "method": "GET",
+                "url": "https://api.github.com/repos/luoluoluo22/gh-action-log-monitor",
+                "output_var": "repo_data"
+            },
+            {
+                "type": "log",
+                "message": "Stars: {repo_data[stargazers_count]}, Forks: {repo_data[forks_count]}"
             }
         ]
     }
