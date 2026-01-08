@@ -1,15 +1,7 @@
-import sys
-import subprocess
-import time
 import json
-
-# Auto-install requests if missing (hack to avoid modifying main.yml which requires workflow permissions)
-try:
-    import requests
-except ImportError:
-    print("[INIT] Installing requests...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-    import requests
+import requests
+import time
+import sys
 
 # Global variables storage
 VARIABLES = {}
