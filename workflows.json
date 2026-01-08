@@ -55,5 +55,25 @@
                 "message": "Stars: {repo_data[stargazers_count]}, Forks: {repo_data[forks_count]}"
             }
         ]
+    },
+    {
+        "name": "Quicker Recent Actions Scraper",
+        "enabled": true,
+        "steps": [
+            {
+                "type": "log",
+                "message": "Fetching recent Quicker actions..."
+            },
+            {
+                "type": "http",
+                "method": "GET",
+                "url": "https://getquicker.net/Share/Recent",
+                "output_var": "quicker_html"
+            },
+            {
+                "type": "python",
+                "code": "import re\nhtml = vars['quicker_html']\n# 提取动作名称和代码的正则\npattern = r'href=\"/Sharedaction\\?code=([^\"]+)\"[^>]*>\\s*([^<]+)\\s*</a>'\nmatches = re.findall(pattern, html)\n\nresults = []\nseen_codes = set()\nfor code, name in matches:\n    name = name.strip()\n    if name and \"\\n\" not in name and code not in seen_codes:\n        results.append({\"name\": name, \"url\": f\"https://getquicker.net/Sharedaction?code={code}\"})\n        seen_codes.add(code)\n\nlog(f\"Successfully found {len(results)} new actions.\")\nfor action in results[:8]:\n    log(f\"[Quicker] {action['name']} -> {action['url']}\")"
+            }
+        ]
     }
 ]
