@@ -1,5 +1,11 @@
 [
   {
+    "id": "20828333453",
+    "timestamp": "2026-01-09 03:00:26",
+    "status": "success",
+    "logs": "[LOG] Triggered by event: schedule\n[LOG] --- Running Workflow: 测试 ---\n[LOG] New task started\n[LOG] --- Workflow Finished ---\n"
+  },
+  {
     "id": "20827816929",
     "timestamp": "2026-01-09 02:41:41",
     "status": "success",
