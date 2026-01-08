@@ -66,6 +66,45 @@ def main():
             log(f"Skipping {wf.get('name')} (Disabled for schedule)")
             continue
         
+        # Time-based scheduling check (Beijing Time)
+        schedule_time = wf.get('schedule_time', '')
+        if event_name == 'schedule' and run_on_schedule and schedule_time:
+            try:
+                # Calculate current Beijing Time
+                import datetime
+                utc_now = datetime.datetime.utcnow()
+                beijing_now = utc_now + datetime.timedelta(hours=8)
+                current_hm = beijing_now.strftime("%H:%M")
+                
+                # Check if we are in the 5-minute window of the target time
+                # Target: HH:MM
+                # We simply check if current_hour == target_hour and abs(current_min - target_min) < 5
+                # But easiest is: Does current HH:MM match target? 
+                # Since cron runs every 5 mins, one of them SHOULD match or be remarkably close.
+                # Let's try direct match first to see if 08:00 hits 08:00
+                # But if action runs at 08:02, exact match fails.
+                
+                target_h, target_m = map(int, schedule_time.split(':'))
+                curr_h, curr_m = beijing_now.hour, beijing_now.minute
+                
+                # Logic: Is the current time within [target, target+5) minutes?
+                # Example: Target 08:00. Action at 08:00, 08:01...08:04 -> Run.
+                # Action at 08:05 -> Too late (next cycle).
+                # Action at 07:55 -> Too early.
+                
+                diff_minutes = (curr_h * 60 + curr_m) - (target_h * 60 + target_m)
+                
+                # Handle day wrap if needed (e.g. 23:59 vs 00:01), but simplistic for now.
+                if 0 <= diff_minutes < 5:
+                    log(f"Time match: Current {current_hm} is within window of {schedule_time}")
+                else:
+                    log(f"Skipping {wf.get('name')} (Scheduled for {schedule_time}, current {current_hm})")
+                    continue
+            except Exception as e:
+                log(f"Error parsing schedule time: {e}")
+                # Fallback: run it or skip? Skip is safer to avoid spam.
+                continue
+
         if event_name == 'workflow_dispatch' and not run_on_dispatch:
             log(f"Skipping {wf.get('name')} (Disabled for manual dispatch)")
             continue

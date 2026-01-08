@@ -328,9 +328,16 @@
                             style="border:1px solid #ccc; padding:4px; border-radius:4px; font-weight:bold;">
 
                         <div style="margin-left:auto; display:flex; gap:10px; align-items:center;">
-                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;">
-                                <input type="checkbox" id="check-schedule"> 定时运行
-                            </label>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <label
+                                    style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;">
+                                    <input type="checkbox" id="check-schedule"
+                                        onchange="document.getElementById('schedule-time').style.display = this.checked ? 'block' : 'none'">
+                                    定时运行
+                                </label>
+                                <input type="time" id="schedule-time" title="设置每天运行时间（留空则每5分钟运行）"
+                                    style="border:1px solid #ccc; border-radius:4px; padding:0 4px; display:none;">
+                            </div>
                             <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;">
                                 <input type="checkbox" id="check-manual"> 手动触发
                             </label>
@@ -484,6 +491,10 @@
 
             document.getElementById('check-schedule').checked = wf.run_on_schedule !== false;
             document.getElementById('check-manual').checked = wf.run_on_dispatch !== false;
+
+            const timeInput = document.getElementById('schedule-time');
+            timeInput.value = wf.schedule_time || "";
+            timeInput.style.display = document.getElementById('check-schedule').checked ? 'block' : 'none';
 
             // Filter logs
             const logPanel = document.getElementById('task-output');
@@ -645,6 +656,7 @@
                 wf.script = editor.getValue();
                 wf.run_on_schedule = document.getElementById('check-schedule').checked;
                 wf.run_on_dispatch = document.getElementById('check-manual').checked;
+                wf.schedule_time = document.getElementById('schedule-time').value;
             }
 
             const token = document.getElementById('gh-token').value;
