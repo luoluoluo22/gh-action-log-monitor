@@ -36,7 +36,12 @@ def execute_step(step):
         try:
             resp = requests.request(method, url, timeout=10)
             if resp.status_code < 400:
-                data = resp.json()
+                try:
+                    data = resp.json()
+                except Exception:
+                    # Fallback to text if JSON parsing fails
+                    data = resp.text
+                
                 if output_var:
                     VARIABLES[output_var] = data
             else:
