@@ -23,7 +23,7 @@ jobs:
       - name: Run Task
         id: task
         run: |
-          python task_script.py > log.txt 2>&1
+          python workflow_engine.py > log.txt 2>&1
           echo "STATUS=success" >> $GITHUB_ENV
 
       - name: Update Log History
