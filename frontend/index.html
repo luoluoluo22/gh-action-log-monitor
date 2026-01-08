@@ -289,6 +289,8 @@
     <div class="header-title">
         <h2 style="margin:0;">🤖 自动化任务管理台</h2>
         <div id="top-auth">
+            <button class="btn" style="margin-right:10px; color:#cf222e; border-color:#d0d7de;"
+                onclick="runAllTasks()">⚡ 运行所有任务</button>
             <span id="auth-status"></span>
             <input type="password" id="gh-token" placeholder="GitHub Token"
                 style="padding:4px; border:1px solid #ccc; border-radius:4px; width: 100px;">
@@ -332,8 +334,9 @@
                                 <input type="checkbox" id="check-manual"> 手动触发
                             </label>
                             <div style="width:1px; height:20px; background:#ddd; margin:0 5px;"></div>
-                            <button class="btn btn-run" onclick="runAllTasks()">� 运行全部</button>
-                            <button class="btn btn-primary" onclick="saveCurrentTask()">� 保存配置</button>
+                            <button class="btn btn-primary" id="btn-save-current" onclick="saveCurrentTask()">💾
+                                保存配置</button>
+                            <button class="btn btn-run" onclick="runCurrentTask()">▶️ 运行任务</button>
                         </div>
                     </div>
                     <!-- Ace Editor Div -->
@@ -512,7 +515,7 @@
             wf.run_on_dispatch = document.getElementById('check-manual').checked;
 
             const token = document.getElementById('gh-token').value;
-            const btn = document.querySelector('.btn-primary'); // Save button
+            const btn = document.getElementById('btn-save-current');
 
             try {
                 btn.disabled = true;
@@ -523,7 +526,6 @@
                     headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: `Update task: ${wf.name}`,
-                        // Pretty print JSON for better readability in raw repo view
                         content: btoa(unescape(encodeURIComponent(JSON.stringify(allWorkflows, null, 4)))),
                         sha: window.sha
                     })
@@ -543,17 +545,29 @@
             }
         }
 
-        async function runAllTasks() {
+        async function triggerWorkflow(taskName = null) {
             const token = document.getElementById('gh-token').value;
+            const inputs = taskName ? { task_name: taskName } : {};
+
             try {
                 const resp = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/main.yml/dispatches`, {
                     method: 'POST',
                     headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ref: 'main' })
+                    body: JSON.stringify({ ref: 'main', inputs: inputs })
                 });
-                if (resp.ok || resp.status === 204) showToast("🚀 运行请求已发送！");
+                if (resp.ok || resp.status === 204) showToast(taskName ? `🚀 正在运行任务: ${taskName}` : "🚀 已触发所有任务");
                 else throw new Error("Status " + resp.status);
             } catch (e) { showToast("❌ 触发失败", "error"); }
+        }
+
+        function runCurrentTask() {
+            if (selectedIndex === -1) return;
+            const taskName = allWorkflows[selectedIndex].name;
+            triggerWorkflow(taskName);
+        }
+
+        function runAllTasks() {
+            triggerWorkflow(null);
         }
 
         function addNewTask() {
