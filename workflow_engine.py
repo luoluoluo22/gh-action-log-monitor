@@ -46,6 +46,14 @@ def main():
     event_name = os.environ.get('EVENT_NAME', 'unknown')
     log(f"Triggered by event: {event_name}")
 
+    # Filter by specific task name if provided
+    target_task = os.environ.get('TASK_NAME')
+    if target_task:
+        log(f"--- Targeted Execution: {target_task} ---")
+        workflows = [w for w in workflows if w.get('name') == target_task]
+        if not workflows:
+            log(f"Warning: Task '{target_task}' not found in workflows.json")
+    
     for wf in workflows:
         if not wf.get('enabled', True):
             continue

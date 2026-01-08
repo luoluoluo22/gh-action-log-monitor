@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 0 * * *'
   workflow_dispatch:
+    inputs:
+      task_name:
+        description: 'Task to run'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -29,6 +34,7 @@ jobs:
         id: task
         env:
           EVENT_NAME: ${{ github.event_name }}
+          TASK_NAME: ${{ github.event.inputs.task_name }}
         run: |
           python workflow_engine.py > log.txt 2>&1
           echo "STATUS=success" >> $GITHUB_ENV
