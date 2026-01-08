@@ -466,29 +466,7 @@
 
         let historyData = [];
 
-        function insertSnippet(select) {
-            const val = select.value;
-            if (!val) return;
 
-            let code = "";
-            if (val === "http_get") {
-                code = `import requests\n\ntry:\n    resp = requests.get('https://api.github.com')\n    print(f"[LOG] Status: {resp.status_code}")\nexcept Exception as e:\n    print(f"[LOG] Error: {e}")`;
-            } else if (val === "http_post") {
-                code = `import requests\n\ndata = {'key': 'value'}\nresp = requests.post('https://httpbin.org/post', json=data)\nprint(f"[LOG] Response: {resp.json()}")`;
-            } else if (val === "log") {
-                code = `print(f"[LOG] Message here")`;
-            } else if (val === "sleep") {
-                code = `import time\nimport random\n\nsec = random.randint(1, 5)\nprint(f"[LOG] Sleeping for {sec}s...")\ntime.sleep(sec)`;
-            } else if (val === "time") {
-                code = `from datetime import datetime\n\nnow = datetime.now().strftime("%Y-%m-%d %H:%M:%S")\nprint(f"[LOG] Time: {now}")`;
-            }
-
-            if (code) {
-                editor.session.insert(editor.getCursorPosition(), code + "\n");
-                editor.focus();
-            }
-            select.value = "";
-        }
 
         function toggleLogDetail(id) {
             const el = document.getElementById('log-detail-' + id);
