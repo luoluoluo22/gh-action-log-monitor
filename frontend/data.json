@@ -1,0 +1,8 @@
+[
+  {
+    "id": "demo-init",
+    "timestamp": "2024-01-01 12:00:00",
+    "status": "success",
+    "logs": "--- 任务开始 ---\n[INFO] 初始化环境...\n[INFO] 这是一个演示日志，当你推送到 GitHub 后，Actions 会自动更新这里的内容。\n[INFO] 连接数据库...\n[SUCCESS] 任务成功完成"
+  }
+]

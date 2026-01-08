@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动化任务日志看板</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f6f8fa; color: #24292f; }
+        .header-title { text-align: center; margin-bottom: 30px; }
+        .card { background: white; border: 1px solid #d0d7de; border-radius: 6px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .success { background: #dafbe1; color: #1a7f37; border: 1px solid rgba(26, 127, 55, 0.2); }
+        .failure { background: #ffebe9; color: #cf222e; border: 1px solid rgba(207, 34, 46, 0.2); }
+        .unknown { background: #f6f8fa; color: #57606a; border: 1px solid rgba(87, 96, 106, 0.2); }
+        
+        pre { background: #2d333b; color: #adbac7; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 13px; margin: 0; white-space: pre-wrap; font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;}
+        
+        .time { color: #57606a; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+        .run-id { font-size: 12px; color: #8c959f; font-family: monospace; }
+        
+        /* Loading & Empty states */
+        .loading { text-align: center; padding: 40px; color: #57606a; }
+        .empty { text-align: center; padding: 40px; color: #57606a; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="header-title">
+        <h1>🤖 每日任务运行日志</h1>
+        <p style="color: #57606a;">基于 GitHub Actions & Pages 的无服务器日志看板</p>
+    </div>
+    
+    <div id="log-container">
+        <div class="loading">正在加载日志数据...</div>
+    </div>
+
+    <script>
+        // 读取同目录下的 data.json
+        // 在 GitHub Pages 中，这个文件会由 Actions 自动更新
+        fetch('data.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('未找到日志记录 (data.json)');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const container = document.getElementById('log-container');
+                container.innerHTML = '';
+                
+                if (data.length === 0) {
+                    container.innerHTML = '<div class="empty">暂无运行记录，请等待第一次 Action 运行...</div>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const statusClass = item.status === 'success' ? 'success' : (item.status === 'unknown' ? 'unknown' : 'failure');
+                    
+                    const html = `
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <span class="badge ${statusClass}">${item.status}</span>
+                                    <span class="run-id">ID: ${item.id}</span>
+                                </div>
+                                <span class="time">🕒 ${item.timestamp} (UTC+8)</span>
+                            </div>
+                            <pre>${item.logs}</pre>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+            })
+            .catch(err => {
+                document.getElementById('log-container').innerHTML = `
+                    <div class="card" style="text-align:center; color:#cf222e;">
+                        <h3>加载失败</h3>
+                        <p>${err.message}</p>
+                        <p>如果是第一次部署，请确保 Actions 至少运行了一次以生成 data.json 文件。</p>
+                    </div>
+                `;
+            });
+    </script>
+</body>
+</html>
