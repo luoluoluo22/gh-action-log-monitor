@@ -1,85 +1,382 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>自动化任务日志看板</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f6f8fa; color: #24292f; }
-        .header-title { text-align: center; margin-bottom: 30px; }
-        .card { background: white; border: 1px solid #d0d7de; border-radius: 6px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
-        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
-        .success { background: #dafbe1; color: #1a7f37; border: 1px solid rgba(26, 127, 55, 0.2); }
-        .failure { background: #ffebe9; color: #cf222e; border: 1px solid rgba(207, 34, 46, 0.2); }
-        .unknown { background: #f6f8fa; color: #57606a; border: 1px solid rgba(87, 96, 106, 0.2); }
-        
-        pre { background: #2d333b; color: #adbac7; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 13px; margin: 0; white-space: pre-wrap; font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;}
-        
-        .time { color: #57606a; font-size: 14px; display: flex; align-items: center; gap: 5px; }
-        .run-id { font-size: 12px; color: #8c959f; font-family: monospace; }
-        
-        /* Loading & Empty states */
-        .loading { text-align: center; padding: 40px; color: #57606a; }
-        .empty { text-align: center; padding: 40px; color: #57606a; font-style: italic; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f6f8fa;
+            color: #24292f;
+            transition: background 0.3s;
+        }
+
+        .header-title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #d0d7de;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 6px;
+            color: #57606a;
+        }
+
+        .tab-btn.active {
+            background: #0969da;
+            color: white;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: #eaeff2;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .success {
+            background: #dafbe1;
+            color: #1a7f37;
+            border: 1px solid rgba(26, 127, 55, 0.2);
+        }
+
+        .failure {
+            background: #ffebe9;
+            color: #cf222e;
+            border: 1px solid rgba(207, 34, 46, 0.2);
+        }
+
+        .unknown {
+            background: #f6f8fa;
+            color: #57606a;
+            border: 1px solid rgba(87, 96, 106, 0.2);
+        }
+
+        pre {
+            background: #2d333b;
+            color: #adbac7;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+        }
+
+        .time {
+            color: #57606a;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .run-id {
+            font-size: 12px;
+            color: #8c959f;
+            font-family: monospace;
+        }
+
+        /* Admin UI */
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            height: 300px;
+            font-family: monospace;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            border: 1px solid rgba(27, 31, 35, 0.15);
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background: #2da44e;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2c974b;
+        }
+
+        .btn-run {
+            background: #0969da;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-run:hover {
+            background: #0550ae;
+        }
+
+        .btn-save {
+            background: #2da44e;
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .status-msg {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
     </style>
 </head>
+
 <body>
     <div class="header-title">
-        <h1>🤖 每日任务运行日志</h1>
-        <p style="color: #57606a;">基于 GitHub Actions & Pages 的无服务器日志看板</p>
+        <h1>🤖 自动化任务看板</h1>
+        <p style="color: #57606a;">基于 GitHub Actions & Pages 的无服务器管理台</p>
     </div>
-    
-    <div id="log-container">
-        <div class="loading">正在加载日志数据...</div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('logs')">📋 日志状态</button>
+        <button class="tab-btn" onclick="switchTab('admin')">⚙️ 任务管理</button>
+    </div>
+
+    <!-- Logs Section -->
+    <div id="logs-section" class="admin-section active">
+        <div id="log-container">
+            <div class="loading" style="text-align: center; padding: 40px;">正在加载日志数据...</div>
+        </div>
+    </div>
+
+    <!-- Admin Section -->
+    <div id="admin-section" class="admin-section">
+        <div class="card">
+            <h3>🔑 身份验证</h3>
+            <div class="form-group">
+                <label>GitHub Personal Access Token (PAT)</label>
+                <input type="password" id="github-token" placeholder="输入 ghp_ 开头的令牌...">
+                <p style="font-size: 12px; color: #57606a;">令牌仅保存在浏览器本地 localStorage，用于调用 GitHub API。</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-run" onclick="triggerWorkflow()">🚀 立即运行所有任务</button>
+                <button class="btn" style="background: #f6f8fa; color: #24292f;" onclick="loadWorkflows()">🔄
+                    加载当前脚本</button>
+            </div>
+            <div id="trigger-msg" class="status-msg"></div>
+        </div>
+
+        <div class="card">
+            <h3>📝 脚本编辑 (workflows.json)</h3>
+            <div class="form-group">
+                <textarea id="workflow-editor" placeholder="正在加载 workflows.json..."></textarea>
+            </div>
+            <button class="btn btn-save" id="save-btn" onclick="saveWorkflows()">💾 保存并部署到 GitHub</button>
+            <div id="save-msg" class="status-msg"></div>
+        </div>
     </div>
 
     <script>
-        // 读取同目录下的 data.json
-        // 在 GitHub Pages 中，这个文件会由 Actions 自动更新
-        fetch('data.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('未找到日志记录 (data.json)');
-                }
-                return response.json();
-            })
-            .then(data => {
-                const container = document.getElementById('log-container');
-                container.innerHTML = '';
-                
-                if (data.length === 0) {
-                    container.innerHTML = '<div class="empty">暂无运行记录，请等待第一次 Action 运行...</div>';
-                    return;
-                }
+        const REPO = 'luoluoluo22/gh-action-log-monitor';
 
-                data.forEach(item => {
-                    const statusClass = item.status === 'success' ? 'success' : (item.status === 'unknown' ? 'unknown' : 'failure');
-                    
-                    const html = `
-                        <div class="card">
-                            <div class="card-header">
-                                <div>
-                                    <span class="badge ${statusClass}">${item.status}</span>
-                                    <span class="run-id">ID: ${item.id}</span>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tab + '-section').classList.add('active');
+
+            if (tab === 'logs') loadLogs();
+            if (tab === 'admin') {
+                const savedToken = localStorage.getItem('gh_token');
+                if (savedToken) document.getElementById('github-token').value = savedToken;
+                loadWorkflows();
+            }
+        }
+
+        function loadLogs() {
+            fetch('data.json?t=' + Date.now())
+                .then(r => r.json())
+                .then(data => {
+                    const container = document.getElementById('log-container');
+                    container.innerHTML = data.length ? '' : '<div style="text-align:center;padding:40px;color:#57606a;">暂无记录</div>';
+                    data.forEach(item => {
+                        const statusClass = item.status === 'success' ? 'success' : (item.status === 'unknown' ? 'unknown' : 'failure');
+                        container.innerHTML += `
+                            <div class="card">
+                                <div class="card-header">
+                                    <div><span class="badge ${statusClass}">${item.status}</span> <span class="run-id">ID: ${item.id}</span></div>
+                                    <span class="time">🕒 ${item.timestamp}</span>
                                 </div>
-                                <span class="time">🕒 ${item.timestamp} (UTC+8)</span>
-                            </div>
-                            <pre>${item.logs}</pre>
-                        </div>
-                    `;
-                    container.innerHTML += html;
+                                <pre>${item.logs}</pre>
+                            </div>`;
+                    });
+                }).catch(err => {
+                    document.getElementById('log-container').innerHTML = '<div class="card" style="color:#cf222e;">加载失败: ' + err.message + '</div>';
                 });
-            })
-            .catch(err => {
-                document.getElementById('log-container').innerHTML = `
-                    <div class="card" style="text-align:center; color:#cf222e;">
-                        <h3>加载失败</h3>
-                        <p>${err.message}</p>
-                        <p>如果是第一次部署，请确保 Actions 至少运行了一次以生成 data.json 文件。</p>
-                    </div>
-                `;
-            });
+        }
+
+        async function loadWorkflows() {
+            const editor = document.getElementById('workflow-editor');
+            editor.value = '正在从 GitHub 获取最新版本...';
+            try {
+                // 直接从 GitHub API 获取，避开缓存
+                const resp = await fetch(`https://api.github.com/repos/${REPO}/contents/workflows.json?t=` + Date.now());
+                const data = await resp.json();
+                const content = atob(data.content); // Base64 decode
+                window.workflowSHA = data.sha; // 记录 SHA 用于更新
+                editor.value = content;
+                // 同时美化一下
+                try {
+                    editor.value = JSON.stringify(JSON.parse(content), null, 4);
+                } catch (e) { }
+            } catch (err) {
+                editor.value = '加载失败，请检查网络或仓库权限';
+            }
+        }
+
+        async function saveWorkflows() {
+            const token = document.getElementById('github-token').value;
+            const content = document.getElementById('workflow-editor').value;
+            const msg = document.getElementById('save-msg');
+            const btn = document.getElementById('save-btn');
+
+            if (!token) return alert('请先输入 GitHub Token!');
+            localStorage.setItem('gh_token', token);
+
+            try {
+                btn.disabled = true;
+                btn.innerText = '正在保存...';
+
+                const resp = await fetch(`https://api.github.com/repos/${REPO}/contents/workflows.json`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: "Update workflows via Admin Console",
+                        content: btoa(unescape(encodeURIComponent(content))),
+                        sha: window.workflowSHA
+                    })
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    window.workflowSHA = data.content.sha;
+                    msg.style.display = 'block';
+                    msg.style.background = '#dafbe1';
+                    msg.innerText = '✅ 保存成功！正在重新部署，预计 30s 内生效。';
+                } else {
+                    const error = await resp.json();
+                    throw new Error(error.message || '保存失败');
+                }
+            } catch (err) {
+                msg.style.display = 'block';
+                msg.style.background = '#ffebe9';
+                msg.innerText = '❌ 错误: ' + err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '💾 保存并部署到 GitHub';
+            }
+        }
+
+        async function triggerWorkflow() {
+            const token = document.getElementById('github-token').value;
+            const msg = document.getElementById('trigger-msg');
+            if (!token) return alert('请先输入 GitHub Token!');
+            localStorage.setItem('gh_token', token);
+
+            try {
+                const resp = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/main.yml/dispatches`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ref: 'main' })
+                });
+
+                if (resp.status === 204) { // Dispatch success returns 204
+                    msg.style.display = 'block';
+                    msg.style.background = '#dafbe1';
+                    msg.innerText = '🚀 运行请求已发送！请稍后刷新日志页面查看结果。';
+                } else {
+                    const error = await resp.json();
+                    throw new Error(error.message);
+                }
+            } catch (err) {
+                msg.style.display = 'block';
+                msg.style.background = '#ffebe9';
+                msg.innerText = '❌ 触发失败: ' + err.message;
+            }
+        }
+
+        // Init
+        loadLogs();
     </script>
 </body>
+
 </html>
