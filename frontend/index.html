@@ -403,9 +403,21 @@
 
         async function loadData() {
             try {
+                const token = document.getElementById('gh-token').value;
+                const headers = token ? { 'Authorization': `token ${token}` } : {};
+
                 // Load Workflows
-                const wResp = await fetch(`https://api.github.com/repos/${REPO}/contents/workflows.json?t=${Date.now()}`);
+                const wResp = await fetch(`https://api.github.com/repos/${REPO}/contents/workflows.json?t=${Date.now()}`, { headers });
+
+                if (!wResp.ok) {
+                    if (wResp.status === 403) throw new Error("API Rate Limit Exceeded (403). check Token.");
+                    if (wResp.status === 404) throw new Error("workflows.json not found.");
+                    throw new Error(`HTTP ${wResp.status}`);
+                }
+
                 const wData = await wResp.json();
+                if (!wData.content) throw new Error("Invalid response content");
+
                 window.sha = wData.sha;
                 allWorkflows = JSON.parse(decodeURIComponent(escape(atob(wData.content))));
 
