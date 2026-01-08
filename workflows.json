@@ -15,7 +15,7 @@
             },
             {
                 "type": "python",
-                "code": "log('Found ' + str(len(vars['top_ids'])) + ' stories')\\nvars['top_5'] = vars['top_ids'][:5]"
+                "code": "log('Found ' + str(len(vars['top_ids'])) + ' stories')\nvars['top_5'] = vars['top_ids'][:5]"
             },
             {
                 "type": "loop",
