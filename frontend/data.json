@@ -1,5 +1,11 @@
 [
   {
+    "id": "20855580368",
+    "timestamp": "2026-01-09 22:47:00",
+    "status": "success",
+    "logs": "[LOG] Triggered by event: schedule\n"
+  },
+  {
     "id": "20854861955",
     "timestamp": "2026-01-09 22:21:25",
     "status": "success",
@@ -292,11 +298,5 @@
     "timestamp": "2026-01-08 22:49:31",
     "status": "success",
     "logs": "[LOG] Triggered by event: schedule\n[LOG] --- Running Workflow: 测试 ---\n[LOG] New task started\n[LOG] --- Workflow Finished ---\n"
-  },
-  {
-    "id": "20820086870",
-    "timestamp": "2026-01-08 22:24:26",
-    "status": "success",
-    "logs": "[LOG] Triggered by event: workflow_dispatch\n[LOG] --- Running Workflow: 测试 ---\n[LOG] New task started\n[LOG] --- Workflow Finished ---\n"
   }
 ]
