@@ -1,5 +1,11 @@
 [
   {
+    "id": "20847813124",
+    "timestamp": "2026-01-09 17:46:01",
+    "status": "success",
+    "logs": "[LOG] Triggered by event: schedule\n"
+  },
+  {
     "id": "20847091851",
     "timestamp": "2026-01-09 17:17:43",
     "status": "success",
@@ -292,11 +298,5 @@
     "timestamp": "2026-01-08 20:55:16",
     "status": "success",
     "logs": "[LOG] --- Running Workflow: Morning News Scraper ---\n[LOG] Starting news scraper task...\n[LOG] HTTP GET https://hacker-news.firebaseio.com/v0/topstories.json\n[LOG] Found 500 stories\n[LOG] HTTP GET https://hacker-news.firebaseio.com/v0/item/46537489.json\n[LOG] Title: Project Patchouli: Open-source electromagnetic drawing tablet hardware\n[LOG] HTTP GET https://hacker-news.firebaseio.com/v0/item/46538001.json\n[LOG] Title: A closer look at a BGP anomaly in Venezuela\n[LOG] HTTP GET https://hacker-news.firebaseio.com/v0/item/46493785.json\n[LOG] Title: The Napoleon Technique: Postponing things to increase productivity\n[LOG] HTTP GET https://hacker-news.firebaseio.com/v0/item/46536340.json\n[LOG] Title: Kernel bugs hide for 2 years on average. Some hide for 20\n[LOG] HTTP GET https://hacker-news.firebaseio.com/v0/item/46468338.json\n[LOG] Title: Lights and Shadows\n[LOG] --- Workflow Finished ---\n"
-  },
-  {
-    "id": "20813356176",
-    "timestamp": "2026-01-08 18:16:07",
-    "status": "success",
-    "logs": "--- 任务开始 ---\n时间: 2026-01-08 10:16:02.781791\n[INFO] 初始化环境...\n[INFO] 连接数据库...\n[INFO] 抓取数据...\n[INFO] 处理数据...\n[INFO] 生成报告...\n--- 任务完成 ---\n总耗时: 13 秒\n"
   }
 ]
